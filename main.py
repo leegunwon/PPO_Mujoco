@@ -1,7 +1,7 @@
 from parse_params.aparse import parse
 from Agents.PPO import PPO
 import torch
-
+import os
 args, agent_args = parse()
 #
 # if args.tensorboard:
@@ -75,10 +75,11 @@ if agent_args.on_policy == True:
                 a = dist.sample()  # action space에서 action 샘플링
                 log_prob = dist.log_prob(a).sum(-1, keepdim=True)
 
-                s_prime, r, done, truncated = env.step(a)
+                s_prime, r, done, truncated = env.step(a.detach().numpy())
                 rollout.append((s, a, r, s_prime, log_prob, done))
                 if len(rollout) == agent_args.rollout_len:
-                    agent.put_data(rollout)
+                    for dat in rollout:
+                        agent.put_data(dat)
                     rollout = []
                 s = s_prime
                 score += r
@@ -88,7 +89,12 @@ if agent_args.on_policy == True:
         if n_epi % print_interval == 0 and n_epi != 0:
             print("# of episode :{}, avg score : {:.1f}".format(n_epi, score / print_interval))
             score = 0.0
+    # 모델 저장 경로 설정
+    model_dir = './model_weights'
 
+    # 디렉토리 존재 여부 확인 후 생성
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
     torch.save(agent.state_dict(), './model_weights/agent_'+str(n_epi))
     env.close()
 
