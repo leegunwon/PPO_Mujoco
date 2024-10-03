@@ -28,6 +28,7 @@ class PPO(nn.Module):
 
     def put_data(self, transition):
         self.data.append(transition)
+        
     def make_batch(self):
         # self.data에서 배치를 무작위로 샘플링
         # self.data는 경험 튜플 (s, a, r, s_prime, done_mask, old_log_prob)로 구성되어야 함
@@ -45,6 +46,7 @@ class PPO(nn.Module):
         old_log_prob = torch.tensor(old_log_prob, dtype=torch.float32)
 
         return s, a, r, s_prime, old_log_prob, done_mask
+        
     def calc_advantage(self, data):
         data_with_adv = []
         for mini_batch in data:
